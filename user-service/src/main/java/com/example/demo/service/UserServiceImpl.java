@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.LoginDto;
@@ -32,18 +33,23 @@ public class UserServiceImpl implements UserService {
 		if (user.isPresent()) {
 			throw new UserNotFoundException("User Already Registered");
 		}
+
+//		Send Email
 		SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
 		simpleMailMessage.setFrom("ammarthegenious@gmail.com");
 		simpleMailMessage.setTo(userDto.getEmailId());
 		simpleMailMessage.setSubject("Regestred Successful");
-		simpleMailMessage.setText("Dear" + " " + userDto.getName() + "," +  "\n" + "You are Registered Successfully!" + "\n"
-				+ "Thanks & Regards" + "," + "\n" + "Teams.");
+		simpleMailMessage.setText("Dear" + " " + userDto.getName() + "," + "\n" + "You are Registered Successfully!"
+				+ "\n" + "Thanks & Regards" + "," + "\n" + "Teams.");
 		javaMailSender.send(simpleMailMessage);
+//		Password Encode
+		BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+		String encode = bCryptPasswordEncoder.encode(userDto.getPassword());
+		userDto.setPassword(encode);
 		User newUser = new User();
 		BeanUtils.copyProperties(userDto, newUser);
 		userRepository.save(newUser);
-//		Password Not Show in it's orignal form on screen
-		newUser.setPassword("*****");
+		newUser.setPassword("*****"); // Do not return the raw password, so
 		BeanUtils.copyProperties(newUser, userDto);
 		return userDto;
 	}
