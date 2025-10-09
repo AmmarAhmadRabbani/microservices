@@ -56,8 +56,38 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public String login(LoginDto loginDto) {
-		// TODO Auto-generated method stub
-		return null;
+		Optional<User> byEmailId = userRepository.findByEmailId(loginDto.getEmailId());
+		if (byEmailId.isEmpty()) {
+			throw new UserNotFoundException("Invalid Email");
+		}
+		User user = byEmailId.get();
+		BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+		boolean passwordMatches = bCryptPasswordEncoder.matches(loginDto.getPassword(), user.getPassword());
+		if (!passwordMatches) {
+			throw new UserNotFoundException("Invalid password");
+		}
+		return "Login Success";
+
+	}
+
+	@Override
+	public UserDto loginFull(LoginDto loginDto) {
+		Optional<User> byEmailId = userRepository.findByEmailId(loginDto.getEmailId());
+		if (!byEmailId.isPresent()) {
+			throw new UserNotFoundException("Invalid Email Id" + loginDto.getEmailId());
+		}
+		User user = byEmailId.get();
+		// Compare raw password with encoded password
+		BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+		boolean passwordMatches = bCryptPasswordEncoder.matches(loginDto.getPassword(), user.getPassword());
+		if (!passwordMatches) {
+			throw new UserNotFoundException("Wrong Password");
+		}
+		// Mask password before returning user details
+		user.setPassword("*****");
+		UserDto userDto = new UserDto();
+		BeanUtils.copyProperties(user, userDto);
+		return userDto;
 	}
 
 }

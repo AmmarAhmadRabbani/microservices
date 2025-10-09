@@ -8,4 +8,6 @@ public interface UserService {
 
 	public String login(LoginDto loginDto);
 
+	public UserDto loginFull(LoginDto loginDto);
+
 }
